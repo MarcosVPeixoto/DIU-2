@@ -30,7 +30,7 @@ public class Weapon : MonoBehaviour
 
         if (playerSpriteRenderer == null)
         {
-            Debug.LogError("SpriteRenderer do player não encontrado!");
+            Debug.LogError("SpriteRenderer do player nï¿½o encontrado!");
         }
     }
 
@@ -45,12 +45,12 @@ public class Weapon : MonoBehaviour
 
     void Shoot()
     {
+        if (ScoreManager.instance.currentScore <= 0) return;
+        ScoreManager.instance.AddScore(-20);
         GameObject bullet = Instantiate(bulletPrefab, firePoint.position, firePoint.rotation);
 
-        // Determina a direção baseado no flipX do player
         float direction = playerSpriteRenderer.flipX ? -1f : 1f;
 
-        // Passa a direção para a bala
         Bullet bulletScript = bullet.GetComponent<Bullet>();
         if (bulletScript != null)
         {

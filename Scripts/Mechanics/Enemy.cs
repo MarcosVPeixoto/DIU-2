@@ -6,6 +6,7 @@ public class Enemy : MonoBehaviour
     public int maxHealth = 50;
     public int currentHealth;
     public int damageToPlayer = 10;
+    public bool isBoss = false;
 
     [Header("Movement")]
     public float moveSpeed = 2f;
@@ -26,7 +27,14 @@ public class Enemy : MonoBehaviour
     [Header("Loot")]
     public GameObject lootDrop;
     public int scoreValue = 10;
-
+    [Header("Jump Settings")]
+    public float jumpForce = 5f;
+    public Transform groundCheck;
+    public float groundCheckRadius = 0.2f;
+    public LayerMask groundLayer;
+    public bool isJumper = true;
+    private bool canJumpAgain = true;
+    public float jumpCooldown = 2.5f;
     private SpriteRenderer spriteRenderer;
     private Color originalColor;
     private Vector3 startPosition;
@@ -35,6 +43,7 @@ public class Enemy : MonoBehaviour
     private Transform player;
     private float lastShootTime;
     private bool playerDetected = false;
+
 
     void Start()
     {
@@ -68,6 +77,10 @@ public class Enemy : MonoBehaviour
         {
             Patrol();
         }
+        if (playerDetected && canJumpAgain && isJumper)
+        {
+            Jump();
+        }
     }
 
     void DetectPlayer()
@@ -77,8 +90,8 @@ public class Enemy : MonoBehaviour
         float distanceToPlayer = Vector2.Distance(transform.position, player.position);
         if (distanceToPlayer <= detectionRange)
         {
+
             playerDetected = true;
-            Debug.Log("PLAYER DETECTADO (modo simples)!");
 
             if (player.position.x > transform.position.x && direction < 0)
             {
@@ -93,9 +106,19 @@ public class Enemy : MonoBehaviour
         {
             playerDetected = false;
         }
-        return;
     }
-
+    void Jump()
+    {
+        if (rb == null) return;
+        rb.linearVelocity = new Vector2(rb.linearVelocity.x, 0f);
+        rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
+        canJumpAgain = false;
+        Invoke(nameof(UpdateJumpStatus), jumpCooldown);
+    }
+    void UpdateJumpStatus()
+    {
+       canJumpAgain = true;
+    }
     void StopAndShoot()
     {
         if (rb != null)
@@ -193,7 +216,8 @@ public class Enemy : MonoBehaviour
         {
             Instantiate(lootDrop, transform.position, Quaternion.identity);
         }
-
+        Debug.Log("Adicionando pontuação: " + ScoreManager.instance.currentScore);
+        ScoreManager.instance.AddScore(100);
         Destroy(gameObject);
     }
 

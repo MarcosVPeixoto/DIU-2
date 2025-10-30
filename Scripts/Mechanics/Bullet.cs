@@ -4,7 +4,7 @@ public class Bullet : MonoBehaviour
 {
     [Header("Bullet Settings")]
     public float speed = 20f;
-    public float lifetime = 3f;
+    public float lifetime = 0.5f;
     public int damage = 10;
 
     [Header("Effects")]
@@ -15,7 +15,7 @@ public class Bullet : MonoBehaviour
 
     private float direction = 1f;
 
-    private string owner = "player";  
+    private string owner = "player";
 
     public void SetDirection(float dir)
     {
@@ -29,43 +29,44 @@ public class Bullet : MonoBehaviour
 
     void Update()
     {
-        Debug.Log($"{transform.position.x}");
     }
 
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
-        //transform = GetComponent<Transform>();
 
         if (rb == null)
         {
-            Debug.LogError("ERRO: Rigidbody2D não encontrado na bala!");
             return;
         }
 
-        // Move a bala para frente
         rb.linearVelocity = new Vector2((direction * speed) / 4, 0);
 
-        Debug.Log("Bala disparada! Velocidade: " + rb.linearVelocity);
+        if (owner == "player")
+        {
+            Invoke(nameof(DestroyBullet), 1f);
 
-        // Destroi a bala após o tempo de vida
-        Destroy(gameObject, lifetime);
+        }
     }
-
+    void DestroyBullet()
+    {
+        Destroy(gameObject);
+    }
     void OnTriggerEnter2D(Collider2D hitInfo)
     {
         Debug.Log("Bala colidiu com: " + hitInfo.gameObject.name + " (Tag: " + hitInfo.tag + ")");
 
-        // Ignora colisões com Player, câmera e outros objetos que não devem destruir a bala
         if (
             hitInfo.CompareTag("MainCamera") ||
-            hitInfo.gameObject.name.Contains("CinemachineConfiner") 
+            hitInfo.gameObject.name.Contains("CinemachineConfiner")
             )
         {
-            Debug.Log("Ignorando colisão com: " + hitInfo.gameObject.name);
             return;
         }
-
+        if (hitInfo.gameObject.name.Contains("Bullet"))
+        {
+            return;
+        }
         if (hitInfo.CompareTag("Player") && owner == "player" || hitInfo.CompareTag("Enemy") && owner == "enemy")
         {
             return;

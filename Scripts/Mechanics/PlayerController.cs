@@ -6,6 +6,7 @@ using static Platformer.Core.Simulation;
 using Platformer.Model;
 using Platformer.Core;
 using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 
 namespace Platformer.Mechanics
 {
@@ -30,11 +31,14 @@ namespace Platformer.Mechanics
 
         public JumpState jumpState = JumpState.Grounded;
         private bool stopJump;
-        /*internal new*/ public Collider2D collider2d;
-        /*internal new*/ public AudioSource audioSource;
+        /*internal new*/
+        public Collider2D collider2d;
+        /*internal new*/
+        public AudioSource audioSource;
         public Health health;
         public bool controlEnabled = true;
-
+        public bool alive = true;
+        public int lives = 3;
         bool jump;
         Vector2 move;
         SpriteRenderer spriteRenderer;
@@ -56,7 +60,7 @@ namespace Platformer.Mechanics
 
             m_MoveAction = InputSystem.actions.FindAction("Player/Move");
             m_JumpAction = InputSystem.actions.FindAction("Player/Jump");
-            
+
             m_MoveAction.Enable();
             m_JumpAction.Enable();
         }
@@ -141,11 +145,24 @@ namespace Platformer.Mechanics
 
         public void TakeDamage(int damage)
         {
+            if (!alive) return;
             var ev = Schedule<PlayerEnteredDeathZone>();
-
-            Debug.Log(gameObject.name + " recebeu " + damage + " de dano. Vida restante: " + health.ObterHP());
+            alive = false;
+            Invoke(nameof(UpdateAlive), 3f);
+            lives--;
+            if (ScoreManager.instance.currentScore <= 100 )
+            {
+                ScoreManager.instance.AddScore(100 - ScoreManager.instance.currentScore);
+            }
+            if (lives <= 0)
+            {
+                SceneManager.LoadScene("GameOver");
+            }
         }
-
+        private void UpdateAlive()
+        {
+            alive = true;
+        }
         public enum JumpState
         {
             Grounded,
